@@ -1,0 +1,13 @@
+name: netcheck
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -s https://ipinfo.io/json || true
+          echo "----"
+          curl -s -o /dev/null -w "doubao_http=%{http_code} time=%{time_total}\n" https://www.doubao.com/ || true
