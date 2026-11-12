@@ -1,18 +1,19 @@
-name: 🫘 Doubao Work Daily
+# 覆盖到你的豆包仓库： .github/workflows/daily.yml
+# 相对上游 L0NE-6/DoubaoWork-Daily 的 daily.yml，改了三处：
+#   1. 取消 schedule 注释（北京时间 09:15 触发）
+#   2. permissions: read -> write（心跳需要提交权限）
+#   3. 末尾新增 Heartbeat step，避免仓库 60 天无活动被 GitHub 停用定时
 
+name: Doubao Work Daily
 on:
+  schedule:
+    - cron: "15 1 * * *"  # UTC 01:15 = 北京时间 09:15
   workflow_dispatch:
-  # 定时默认关闭；确认账号可用后取消下面两行注释
-  # schedule:
-  #   - cron: "15 1 * * *"
-
 permissions:
-  contents: read
-
+  contents: write
 concurrency:
   group: doubaowork-daily
   cancel-in-progress: false
-
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -50,3 +51,12 @@ jobs:
         with:
           path: doubaowork_state.json
           key: doubaowork-state-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Heartbeat (keep schedule alive)
+        if: always()
+        run: |
+          date -u '+%Y-%m-%dT%H:%M:%SZ' >> heartbeat.log
+          git config user.name "checkin-bot"
+          git config user.email "checkin-bot@users.noreply.github.com"
+          git add -f heartbeat.log
+          git commit -m "chore: heartbeat [skip ci]" || true
+          git push || true
